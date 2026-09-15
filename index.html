@@ -246,7 +246,7 @@ button:hover {
 
 <div>
   <label style="font-size:20px;">Lösung: </label>
-  <input type="text" id="answerInput" inputmode="decimal">
+  <input type="text" id="answerInput" inputmode="numeric">
   <button onclick="repeatTask()">🔁 Wiederholen</button>
 </div>
 
@@ -279,7 +279,7 @@ button:hover {
   </div>
 </div>
 
-<div id="stats">0 von 10 richtig</div>
+<div id="stats">0 von 10 beim ersten Versuch richtig</div>
 
 <div id="summary" style="display:none;">
   <p id="finalMessage"></p>
@@ -319,20 +319,26 @@ let currentMode = null;
 let currentDifficulty = null;
 let currentTaskText = "";
 
-/* Rakete = 2 Sekunden */
 let displayDuration = 2000;
 
 let usedTasks = new Set();
+
 let firstAttemptForCurrentTask = true;
 let taskSolved = false;
 let reflectionLocked = false;
+
+/*
+  NEU:
+  Anzahl der falschen Versuche bei der aktuellen Aufgabe.
+*/
+let wrongAttempts = 0;
 
 
 /* =========================================================
    ANZEIGEZEIT
    ========================================================= */
 
-function setDuration(ms,btn){
+function setDuration(ms, btn) {
   displayDuration = ms;
 
   document.querySelectorAll(".duration-btn").forEach(
@@ -347,7 +353,7 @@ function setDuration(ms,btn){
    MODUS AUSWÄHLEN
    ========================================================= */
 
-function chooseMode(mode){
+function chooseMode(mode) {
 
   currentMode = mode;
 
@@ -374,11 +380,10 @@ function chooseMode(mode){
 
 
 /* =========================================================
-   SCHWIERIGKEIT AUSWÄHLEN
+   SCHWIERIGKEIT
    ========================================================= */
 
-function setDifficulty(level){
-
+function setDifficulty(level) {
   currentDifficulty = level;
 
   document.getElementById("difficultySelection").style.display = "none";
@@ -388,13 +393,16 @@ function setDifficulty(level){
 
 
 /* =========================================================
-   ZURÜCK ZUM HAUPTMENÜ
+   HAUPTMENÜ
    ========================================================= */
 
-function goToMenu(){
+function goToMenu() {
 
   currentMode = null;
   currentDifficulty = null;
+  currentTaskText = "";
+  wrongAttempts = 0;
+  taskSolved = false;
 
   document.getElementById("modeSelection").style.display = "block";
   document.getElementById("difficultySelection").style.display = "none";
@@ -409,7 +417,10 @@ function goToMenu(){
   document.getElementById("stats").textContent =
     "0 von 10 beim ersten Versuch richtig";
 
-  document.getElementById("answerInput").value = "";
+  const input = document.getElementById("answerInput");
+  input.value = "";
+  input.disabled = false;
+  input.classList.remove("wrong");
 }
 
 
@@ -417,7 +428,7 @@ function goToMenu(){
    NEUE RUNDE
    ========================================================= */
 
-function startRound(){
+function startRound() {
 
   currentTask = 0;
   correctCount = 0;
@@ -428,18 +439,18 @@ function startRound(){
   firstAttemptForCurrentTask = true;
   taskSolved = false;
   reflectionLocked = false;
+  wrongAttempts = 0;
 
   document.getElementById("summary").style.display = "none";
   document.getElementById("reflectionSection").style.display = "none";
   document.getElementById("perfectImg").style.display = "none";
   document.getElementById("systemMarker").style.display = "none";
-
   document.getElementById("selfMarker").style.left = "0px";
 
   document.getElementById("stats").textContent =
     "0 von 10 beim ersten Versuch richtig";
 
-  document.querySelectorAll(".scale-item").forEach(item=>{
+  document.querySelectorAll(".scale-item").forEach(item => {
     item.style.pointerEvents = "auto";
     item.style.opacity = "1";
   });
@@ -452,38 +463,38 @@ function startRound(){
    HILFSFUNKTIONEN
    ========================================================= */
 
-function randInt(min,max){
-  return Math.floor(Math.random() * (max-min+1)) + min;
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function isWholeTen(n){
+function isWholeTen(n) {
   return n % 10 === 0;
 }
 
-function isWholeHundred(n){
+function isWholeHundred(n) {
   return n % 100 === 0;
 }
 
 
 /* =========================================================
-   PASSENDEN AUFGABENGENERATOR AUSWÄHLEN
+   AUFGABENGENERATOR AUSWÄHLEN
    ========================================================= */
 
-function generateTask(){
+function generateTask() {
 
-  if(currentMode === "addition100"){
+  if (currentMode === "addition100") {
     return generateAddition100(currentDifficulty);
   }
 
-  if(currentMode === "subtraktion100"){
+  if (currentMode === "subtraktion100") {
     return generateSubtraktion100(currentDifficulty);
   }
 
-  if(currentMode === "addition1000"){
+  if (currentMode === "addition1000") {
     return generateAddition1000(currentDifficulty);
   }
 
-  if(currentMode === "subtraktion1000"){
+  if (currentMode === "subtraktion1000") {
     return generateSubtraktion1000(currentDifficulty);
   }
 }
@@ -493,22 +504,19 @@ function generateTask(){
    ADDITION BIS 100
    ========================================================= */
 
-function generateAddition100(level){
+function generateAddition100(level) {
 
   let a, b, tries = 0;
 
-  /* 🌱 EINFACH
-     Ganze Zehnerzahl + andere Zahl.
-     Die Zehnerzahl kann vorne oder hinten stehen.
-  */
+  /* 🌱 Einfach: voller Zehner + andere Zahl */
 
-  if(level === 1){
+  if (level === 1) {
 
-    do{
-      const zehner = randInt(1,9) * 10;
-      const andere = randInt(1,99);
+    do {
+      const zehner = randInt(1, 9) * 10;
+      const andere = randInt(1, 99);
 
-      if(!isWholeTen(andere) && zehner + andere <= 100){
+      if (!isWholeTen(andere) && zehner + andere <= 100) {
         a = zehner;
         b = andere;
         break;
@@ -516,10 +524,10 @@ function generateAddition100(level){
 
       tries++;
 
-    }while(tries < 500);
+    } while (tries < 500);
 
-    if(Math.random() < 0.5){
-      [a,b] = [b,a];
+    if (Math.random() < 0.5) {
+      [a, b] = [b, a];
     }
 
     correctAnswer = a + b;
@@ -528,28 +536,24 @@ function generateAddition100(level){
   }
 
 
-  /* 🌿 MITTEL
-     Zwei Zahlen ohne Zehnerübergang.
-  */
+  /* 🌿 Mittel: ohne Zehnerübergang */
 
-  if(level === 2){
+  if (level === 2) {
 
-    tries = 0;
-
-    do{
-      a = randInt(10,89);
-      b = randInt(10,89);
+    do {
+      a = randInt(10, 89);
+      b = randInt(10, 89);
 
       const ohneUebergang =
         (a % 10) + (b % 10) < 10;
 
-      if(a + b <= 100 && ohneUebergang){
+      if (a + b <= 100 && ohneUebergang) {
         break;
       }
 
       tries++;
 
-    }while(tries < 1000);
+    } while (tries < 1000);
 
     correctAnswer = a + b;
 
@@ -557,26 +561,22 @@ function generateAddition100(level){
   }
 
 
-  /* 🌳 SCHWIERIG
-     Zwei Zahlen mit Zehnerübergang.
-  */
+  /* 🌳 Schwierig: mit Zehnerübergang */
 
-  tries = 0;
-
-  do{
-    a = randInt(10,89);
-    b = randInt(10,89);
+  do {
+    a = randInt(10, 89);
+    b = randInt(10, 89);
 
     const mitUebergang =
       (a % 10) + (b % 10) >= 10;
 
-    if(a + b <= 100 && mitUebergang){
+    if (a + b <= 100 && mitUebergang) {
       break;
     }
 
     tries++;
 
-  }while(tries < 1000);
+  } while (tries < 1000);
 
   correctAnswer = a + b;
 
@@ -588,27 +588,25 @@ function generateAddition100(level){
    SUBTRAKTION BIS 100
    ========================================================= */
 
-function generateSubtraktion100(level){
+function generateSubtraktion100(level) {
 
   let a, b, tries = 0;
 
-  /* 🌱 EINFACH
-     Eine Zahl minus eine ganze Zehnerzahl.
-  */
+  /* 🌱 Einfach: Zahl minus voller Zehner */
 
-  if(level === 1){
+  if (level === 1) {
 
-    do{
-      a = randInt(11,99);
-      b = randInt(1,9) * 10;
+    do {
+      a = randInt(11, 99);
+      b = randInt(1, 9) * 10;
 
-      if(!isWholeTen(a) && b < a){
+      if (!isWholeTen(a) && b < a) {
         break;
       }
 
       tries++;
 
-    }while(tries < 500);
+    } while (tries < 500);
 
     correctAnswer = a - b;
 
@@ -616,28 +614,24 @@ function generateSubtraktion100(level){
   }
 
 
-  /* 🌿 MITTEL
-     Ohne Zehnerübergang / Entbündeln.
-  */
+  /* 🌿 Mittel: ohne Entbündeln */
 
-  if(level === 2){
+  if (level === 2) {
 
-    tries = 0;
-
-    do{
-      a = randInt(20,99);
-      b = randInt(10,a-1);
+    do {
+      a = randInt(20, 99);
+      b = randInt(10, a - 1);
 
       const ohneUebergang =
         (a % 10) >= (b % 10);
 
-      if(ohneUebergang){
+      if (ohneUebergang) {
         break;
       }
 
       tries++;
 
-    }while(tries < 1000);
+    } while (tries < 1000);
 
     correctAnswer = a - b;
 
@@ -645,26 +639,22 @@ function generateSubtraktion100(level){
   }
 
 
-  /* 🌳 SCHWIERIG
-     Mit Zehnerübergang / Entbündeln.
-  */
+  /* 🌳 Schwierig: mit Entbündeln */
 
-  tries = 0;
-
-  do{
-    a = randInt(20,99);
-    b = randInt(10,a-1);
+  do {
+    a = randInt(20, 99);
+    b = randInt(10, a - 1);
 
     const mitUebergang =
       (a % 10) < (b % 10);
 
-    if(mitUebergang){
+    if (mitUebergang) {
       break;
     }
 
     tries++;
 
-  }while(tries < 1000);
+  } while (tries < 1000);
 
   correctAnswer = a - b;
 
@@ -676,26 +666,22 @@ function generateSubtraktion100(level){
    ADDITION BIS 1000
    ========================================================= */
 
-function generateAddition1000(level){
+function generateAddition1000(level) {
 
   let a, b, tries = 0;
 
-  /* 🌱 EINFACH
-     Ganze Hunderterzahl + andere Zahl.
-     Die Hunderterzahl kann vorne oder hinten stehen.
-     Ergebnis maximal 1000.
-  */
+  /* 🌱 Einfach: voller Hunderter + andere Zahl */
 
-  if(level === 1){
+  if (level === 1) {
 
-    do{
-      const hunderter = randInt(1,9) * 100;
-      const andere = randInt(1,999);
+    do {
+      const hunderter = randInt(1, 9) * 100;
+      const andere = randInt(1, 999);
 
-      if(
+      if (
         !isWholeHundred(andere) &&
         hunderter + andere <= 1000
-      ){
+      ) {
         a = hunderter;
         b = andere;
         break;
@@ -703,10 +689,10 @@ function generateAddition1000(level){
 
       tries++;
 
-    }while(tries < 1000);
+    } while (tries < 1000);
 
-    if(Math.random() < 0.5){
-      [a,b] = [b,a];
+    if (Math.random() < 0.5) {
+      [a, b] = [b, a];
     }
 
     correctAnswer = a + b;
@@ -715,21 +701,13 @@ function generateAddition1000(level){
   }
 
 
-  /* 🌿 MITTEL
-     Addition ohne Übertrag.
+  /* 🌿 Mittel: ohne Übertrag */
 
-     Einer + Einer < 10
-     Zehner + Zehner < 10
-     Gesamtergebnis maximal 1000.
-  */
+  if (level === 2) {
 
-  if(level === 2){
-
-    tries = 0;
-
-    do{
-      a = randInt(100,899);
-      b = randInt(100,899);
+    do {
+      a = randInt(100, 899);
+      b = randInt(100, 899);
 
       const einerOhneUebertrag =
         (a % 10) + (b % 10) < 10;
@@ -743,17 +721,17 @@ function generateAddition1000(level){
       const zehnerOhneUebertrag =
         zehnerA + zehnerB < 10;
 
-      if(
+      if (
         a + b <= 1000 &&
         einerOhneUebertrag &&
         zehnerOhneUebertrag
-      ){
+      ) {
         break;
       }
 
       tries++;
 
-    }while(tries < 2000);
+    } while (tries < 2000);
 
     correctAnswer = a + b;
 
@@ -761,16 +739,11 @@ function generateAddition1000(level){
   }
 
 
-  /* 🌳 SCHWIERIG
-     Mindestens ein Übertrag:
-     entweder bei den Einern oder bei den Zehnern.
-  */
+  /* 🌳 Schwierig: mindestens ein Übertrag */
 
-  tries = 0;
-
-  do{
-    a = randInt(100,899);
-    b = randInt(100,899);
+  do {
+    a = randInt(100, 899);
+    b = randInt(100, 899);
 
     const einerUebertrag =
       (a % 10) + (b % 10) >= 10;
@@ -784,19 +757,16 @@ function generateAddition1000(level){
     const zehnerUebertrag =
       zehnerA + zehnerB >= 10;
 
-    const mindestensEinUebertrag =
-      einerUebertrag || zehnerUebertrag;
-
-    if(
+    if (
       a + b <= 1000 &&
-      mindestensEinUebertrag
-    ){
+      (einerUebertrag || zehnerUebertrag)
+    ) {
       break;
     }
 
     tries++;
 
-  }while(tries < 2000);
+  } while (tries < 2000);
 
   correctAnswer = a + b;
 
@@ -808,31 +778,25 @@ function generateAddition1000(level){
    SUBTRAKTION BIS 1000
    ========================================================= */
 
-function generateSubtraktion1000(level){
+function generateSubtraktion1000(level) {
 
   let a, b, tries = 0;
 
-  /* 🌱 EINFACH
-     Eine Zahl minus eine ganze Hunderterzahl.
-     Keine negativen Ergebnisse.
-  */
+  /* 🌱 Einfach: Zahl minus voller Hunderter */
 
-  if(level === 1){
+  if (level === 1) {
 
-    do{
-      a = randInt(101,999);
-      b = randInt(1,9) * 100;
+    do {
+      a = randInt(101, 999);
+      b = randInt(1, 9) * 100;
 
-      if(
-        !isWholeHundred(a) &&
-        b < a
-      ){
+      if (!isWholeHundred(a) && b < a) {
         break;
       }
 
       tries++;
 
-    }while(tries < 1000);
+    } while (tries < 1000);
 
     correctAnswer = a - b;
 
@@ -840,27 +804,16 @@ function generateSubtraktion1000(level){
   }
 
 
-  /* 🌿 MITTEL
-     Subtraktion ohne Entbündeln.
+  /* 🌿 Mittel: ohne Entbündeln */
 
-     Einer der ersten Zahl >= Einer der zweiten Zahl.
-     Zehner der ersten Zahl >= Zehner der zweiten Zahl.
-     Hunderter der ersten Zahl >= Hunderter der zweiten Zahl.
-  */
+  if (level === 2) {
 
-  if(level === 2){
+    do {
+      a = randInt(200, 999);
+      b = randInt(100, a - 1);
 
-    tries = 0;
-
-    do{
-      a = randInt(200,999);
-      b = randInt(100,a-1);
-
-      const einerA =
-        a % 10;
-
-      const einerB =
-        b % 10;
+      const einerA = a % 10;
+      const einerB = b % 10;
 
       const zehnerA =
         Math.floor(a / 10) % 10;
@@ -879,13 +832,13 @@ function generateSubtraktion1000(level){
         zehnerA >= zehnerB &&
         hunderterA >= hunderterB;
 
-      if(ohneEntbuendeln){
+      if (ohneEntbuendeln) {
         break;
       }
 
       tries++;
 
-    }while(tries < 2000);
+    } while (tries < 2000);
 
     correctAnswer = a - b;
 
@@ -893,25 +846,14 @@ function generateSubtraktion1000(level){
   }
 
 
-  /* 🌳 SCHWIERIG
-     Mindestens einmal Entbündeln.
+  /* 🌳 Schwierig: mindestens einmal Entbündeln */
 
-     Das ist der Fall, wenn bei den Einern oder
-     Zehnern die obere Ziffer kleiner ist als
-     die untere Ziffer.
-  */
+  do {
+    a = randInt(200, 999);
+    b = randInt(100, a - 1);
 
-  tries = 0;
-
-  do{
-    a = randInt(200,999);
-    b = randInt(100,a-1);
-
-    const einerA =
-      a % 10;
-
-    const einerB =
-      b % 10;
+    const einerA = a % 10;
+    const einerB = b % 10;
 
     const zehnerA =
       Math.floor(a / 10) % 10;
@@ -925,16 +867,13 @@ function generateSubtraktion1000(level){
     const entbuendelnZehner =
       zehnerA < zehnerB;
 
-    const mindestensEinEntbuendeln =
-      entbuendelnEiner || entbuendelnZehner;
-
-    if(mindestensEinEntbuendeln){
+    if (entbuendelnEiner || entbuendelnZehner) {
       break;
     }
 
     tries++;
 
-  }while(tries < 2000);
+  } while (tries < 2000);
 
   correctAnswer = a - b;
 
@@ -946,9 +885,9 @@ function generateSubtraktion1000(level){
    NÄCHSTE AUFGABE
    ========================================================= */
 
-function nextTask(){
+function nextTask() {
 
-  if(currentTask >= totalTasks){
+  if (currentTask >= totalTasks) {
     endRound();
     return;
   }
@@ -963,33 +902,38 @@ function nextTask(){
   firstAttemptForCurrentTask = true;
   taskSolved = false;
 
+  /*
+    Bei jeder neuen Aufgabe beginnt die Zahl
+    der Fehlversuche wieder bei 0.
+  */
+  wrongAttempts = 0;
+
   let newTask;
   let safety = 0;
 
-  do{
+  do {
     newTask = generateTask();
     safety++;
 
-  }while(
+  } while (
     usedTasks.has(newTask) &&
     safety < 100
   );
 
   usedTasks.add(newTask);
-
   currentTaskText = newTask;
 
   document.getElementById("taskDisplay").textContent =
     currentTaskText;
 
-  setTimeout(()=>{
+  setTimeout(() => {
 
     document.getElementById("taskDisplay").textContent = "";
 
     input.disabled = false;
     input.focus();
 
-  },displayDuration);
+  }, displayDuration);
 }
 
 
@@ -997,43 +941,49 @@ function nextTask(){
    ANTWORT PRÜFEN
    ========================================================= */
 
-function checkAnswer(){
+function checkAnswer() {
 
   const input =
     document.getElementById("answerInput");
 
-  if(
+  if (
     taskSolved ||
     currentTask >= totalTasks ||
     input.disabled
-  ){
+  ) {
     return;
   }
 
   const raw =
-    input.value.trim().replace(",",".");
+    input.value.trim();
 
-  if(raw === ""){
+  if (raw === "") {
     return;
   }
 
   const value =
-    parseInt(raw,10);
+    parseInt(raw, 10);
 
-  if(Number.isNaN(value)){
+  if (Number.isNaN(value)) {
     return;
   }
 
   input.disabled = true;
 
 
-  /* RICHTIGE ANTWORT */
+  /* =======================================================
+     RICHTIGE ANTWORT
+     ======================================================= */
 
-  if(value === correctAnswer){
+  if (value === correctAnswer) {
 
     taskSolved = true;
 
-    if(firstAttemptForCurrentTask){
+    /*
+      Nur eine sofort richtige Antwort zählt
+      für die Statistik.
+    */
+    if (firstAttemptForCurrentTask) {
       correctCount++;
     }
 
@@ -1043,56 +993,161 @@ function checkAnswer(){
     input.classList.remove("wrong");
 
     currentTask =
-      Math.min(currentTask + 1,totalTasks);
+      Math.min(currentTask + 1, totalTasks);
 
-    document.getElementById("stats").textContent =
-      `${correctCount} von ${totalTasks} beim ersten Versuch richtig`;
+    updateStats();
 
-    setTimeout(()=>{
+    setTimeout(() => {
 
-      if(currentTask >= totalTasks){
+      if (currentTask >= totalTasks) {
         endRound();
-      }else{
+      } else {
         nextTask();
       }
 
-    },1200);
+    }, 1200);
+
+    return;
+  }
 
 
-  /* FALSCHE ANTWORT */
+  /* =======================================================
+     FALSCHE ANTWORT
+     ======================================================= */
 
-  }else{
+  firstAttemptForCurrentTask = false;
+  wrongAttempts++;
 
-    firstAttemptForCurrentTask = false;
+  input.classList.add("wrong");
 
-    input.classList.add("wrong");
+
+  /* =======================================================
+     1. FEHLVERSUCH
+     ======================================================= */
+
+  if (wrongAttempts === 1) {
 
     document.getElementById("taskDisplay").textContent =
       "Noch nicht richtig – versuche es noch einmal. ❌";
 
-    setTimeout(()=>{
+    setTimeout(() => {
 
       input.value = "";
       input.classList.remove("wrong");
       input.disabled = false;
 
       document.getElementById("taskDisplay").textContent =
-        "Du kannst die Aufgabe wiederholen oder noch einmal antworten.";
+        "Versuche es noch einmal.";
 
       input.focus();
 
-    },1100);
+    }, 1100);
+
+    return;
+  }
+
+
+  /* =======================================================
+     2. FEHLVERSUCH
+     Aufgabe wird automatisch erneut gezeigt.
+     ======================================================= */
+
+  if (wrongAttempts === 2) {
+
+    document.getElementById("taskDisplay").textContent =
+      "Schau dir die Aufgabe noch einmal genau an. 👀";
+
+    setTimeout(() => {
+
+      input.value = "";
+      input.classList.remove("wrong");
+
+      /*
+        Aufgabe wird erneut für die gewählte
+        Anzeigezeit eingeblendet.
+      */
+      document.getElementById("taskDisplay").textContent =
+        currentTaskText;
+
+      setTimeout(() => {
+
+        document.getElementById("taskDisplay").textContent = "";
+
+        input.disabled = false;
+        input.focus();
+
+      }, displayDuration);
+
+    }, 1200);
+
+    return;
+  }
+
+
+  /* =======================================================
+     3. FEHLVERSUCH
+     Richtige Lösung wird gezeigt.
+     Danach geht es automatisch weiter.
+     ======================================================= */
+
+  if (wrongAttempts >= 3) {
+
+    taskSolved = true;
+
+    input.value = "";
+    input.classList.remove("wrong");
+    input.disabled = true;
+
+    document.getElementById("taskDisplay").innerHTML =
+      `Die Lösung ist:<br><strong>${currentTaskText} = ${correctAnswer}</strong> 💡`;
+
+    /*
+      Die Aufgabe ist jetzt abgeschlossen,
+      zählt aber NICHT als beim ersten Versuch richtig.
+    */
+    currentTask =
+      Math.min(currentTask + 1, totalTasks);
+
+    updateStats();
+
+    /*
+      Lösung bleibt 3,5 Sekunden sichtbar.
+    */
+    setTimeout(() => {
+
+      if (currentTask >= totalTasks) {
+        endRound();
+      } else {
+        nextTask();
+      }
+
+    }, 3500);
   }
 }
 
 
 /* =========================================================
-   AUFGABE WIEDERHOLEN
+   STATISTIK AKTUALISIEREN
    ========================================================= */
 
-function repeatTask(){
+function updateStats() {
 
-  if(!currentTaskText){
+  document.getElementById("stats").textContent =
+    `${correctCount} von ${totalTasks} beim ersten Versuch richtig`;
+}
+
+
+/* =========================================================
+   AUFGABE MANUELL WIEDERHOLEN
+   ========================================================= */
+
+function repeatTask() {
+
+  if (
+    !currentTaskText ||
+    taskSolved ||
+    currentTask >= totalTasks
+  ) {
     return;
   }
 
@@ -1104,14 +1159,14 @@ function repeatTask(){
   document.getElementById("taskDisplay").textContent =
     currentTaskText;
 
-  setTimeout(()=>{
+  setTimeout(() => {
 
     document.getElementById("taskDisplay").textContent = "";
 
     input.disabled = false;
     input.focus();
 
-  },displayDuration);
+  }, displayDuration);
 }
 
 
@@ -1119,7 +1174,7 @@ function repeatTask(){
    RUNDE BEENDEN
    ========================================================= */
 
-function endRound(){
+function endRound() {
 
   taskSolved = true;
 
@@ -1134,12 +1189,12 @@ function endRound(){
   document.getElementById("finalMessage").textContent =
     `🎉 Fertig! ${correctCount} von ${totalTasks} Aufgaben waren beim ersten Versuch richtig.`;
 
-  if(correctCount === totalTasks){
+  if (correctCount === totalTasks) {
 
     document.getElementById("perfectImg").style.display =
       "block";
 
-  }else{
+  } else {
 
     document.getElementById("perfectImg").style.display =
       "none";
@@ -1157,9 +1212,9 @@ function endRound(){
    SELBSTEINSCHÄTZUNG
    ========================================================= */
 
-function selectReflection(level){
+function selectReflection(level) {
 
-  if(reflectionLocked){
+  if (reflectionLocked) {
     return;
   }
 
@@ -1169,16 +1224,15 @@ function selectReflection(level){
   positionSelfMarker(level);
 
   /*
-    Einschätzung des Programms wird bewusst
-    erst nach der Selbsteinschätzung gezeigt.
+    Systemeinschätzung wird erst nach der
+    Selbsteinschätzung sichtbar.
   */
-
   document.getElementById("systemMarker").style.display =
     "block";
 
   positionSystemMarker();
 
-  document.querySelectorAll(".scale-item").forEach(item=>{
+  document.querySelectorAll(".scale-item").forEach(item => {
     item.style.pointerEvents = "none";
     item.style.opacity = "0.92";
   });
@@ -1189,17 +1243,17 @@ function selectReflection(level){
    SYSTEMEINSCHÄTZUNG
    ========================================================= */
 
-function getSystemLevel(){
+function getSystemLevel() {
 
-  if(correctCount <= 3){
+  if (correctCount <= 3) {
     return 1;
   }
 
-  if(correctCount <= 6){
+  if (correctCount <= 6) {
     return 2;
   }
 
-  if(correctCount <= 8){
+  if (correctCount <= 8) {
     return 3;
   }
 
@@ -1211,7 +1265,7 @@ function getSystemLevel(){
    MARKER POSITIONIEREN
    ========================================================= */
 
-function positionSelfMarker(level){
+function positionSelfMarker(level) {
 
   const items =
     document.querySelectorAll(".scale-item");
@@ -1220,7 +1274,7 @@ function positionSelfMarker(level){
     document.getElementById("selfMarker");
 
   const rect =
-    items[level-1].getBoundingClientRect();
+    items[level - 1].getBoundingClientRect();
 
   const wrapperRect =
     document.querySelector(".scale-wrapper").getBoundingClientRect();
@@ -1233,7 +1287,7 @@ function positionSelfMarker(level){
 }
 
 
-function positionSystemMarker(){
+function positionSystemMarker() {
 
   const systemLevel =
     getSystemLevel();
@@ -1245,7 +1299,7 @@ function positionSystemMarker(){
     document.getElementById("systemMarker");
 
   const rect =
-    items[systemLevel-1].getBoundingClientRect();
+    items[systemLevel - 1].getBoundingClientRect();
 
   const wrapperRect =
     document.querySelector(".scale-wrapper").getBoundingClientRect();
@@ -1259,10 +1313,10 @@ function positionSystemMarker(){
 
 
 /* =========================================================
-   TABLET / TOUCH ERKENNEN
+   TOUCH / TABLET ERKENNEN
    ========================================================= */
 
-window.addEventListener("load",function(){
+window.addEventListener("load", function() {
 
   const input =
     document.getElementById("answerInput");
@@ -1270,17 +1324,17 @@ window.addEventListener("load",function(){
   document.getElementById("menuBtn").style.display =
     "none";
 
-  if(
+  if (
     ('ontouchstart' in window) ||
     navigator.maxTouchPoints > 0
-  ){
+  ) {
 
     document.getElementById("tabletKeyboard").style.display =
       "block";
 
-    input.setAttribute("readonly",true);
+    input.setAttribute("readonly", true);
 
-  }else{
+  } else {
 
     input.removeAttribute("readonly");
   }
@@ -1291,12 +1345,12 @@ window.addEventListener("load",function(){
    TABLET-TASTATUR
    ========================================================= */
 
-function pressKey(key){
+function pressKey(key) {
 
   const input =
     document.getElementById("answerInput");
 
-  if(input.disabled){
+  if (input.disabled) {
     return;
   }
 
@@ -1304,17 +1358,17 @@ function pressKey(key){
 }
 
 
-function deleteKey(){
+function deleteKey() {
 
   const input =
     document.getElementById("answerInput");
 
-  if(input.disabled){
+  if (input.disabled) {
     return;
   }
 
   input.value =
-    input.value.slice(0,-1);
+    input.value.slice(0, -1);
 }
 
 
@@ -1322,24 +1376,24 @@ function deleteKey(){
    ENTER-TASTE AM COMPUTER
    ========================================================= */
 
-document.addEventListener("keydown",function(e){
+document.addEventListener("keydown", function(e) {
 
   const isTouch =
     ('ontouchstart' in window) ||
     navigator.maxTouchPoints > 0;
 
-  if(
+  if (
     !isTouch &&
     e.key === "Enter"
-  ){
+  ) {
 
     const input =
       document.getElementById("answerInput");
 
-    if(
+    if (
       !input.disabled &&
       input.value.trim() !== ""
-    ){
+    ) {
       checkAnswer();
     }
   }
