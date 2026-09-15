@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Blitzrechnen</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+body {
+  font-family: 'Fredoka One', sans-serif;
+  background: linear-gradient(135deg, #dbe7f1, #f4f7fb);
+  text-align: center;
+  padding: 40px;
+  margin: 0;
+}
+
+h1 {
+  font-size: 56px;
+  margin-bottom: 20px;
+}
+
+#taskDisplay {
+  font-size: 52px;
+  margin: 60px auto;
+  min-height: 100px;
+  padding: 30px 50px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+  transition: all 0.2s ease;
+}
+
+button {
+  font-family: inherit;
+  font-size: 16px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: none;
+  background: white;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+}
+
+.duration-btn.active,
+.toggle-btn.active {
+  background: #3b82f6;
+  color: white;
+}
+
+#modeSelection button,
+#difficultySelection button {
+  font-size: 18px;
+  padding: 14px 28px;
+  margin: 10px;
+}
+
+#modeSelection h2,
+#difficultySelection h2 {
+  margin-top: 8px;
+  margin-bottom: 14px;
+  font-size: 26px;
+}
+
+#answerInput {
+  font-size: 24px;
+  padding: 14px;
+  width: 200px;
+  border-radius: 12px;
+  border: none;
+  background: #e8f5e9;
+  box-shadow: inset 0 3px 6px rgba(0,0,0,0.08);
+}
+
+#answerInput.wrong {
+  background: #fde2e2;
+}
+
+#stats {
+  margin-top: 20px;
+  font-size: 18px;
+  opacity: 0.7;
+}
+
+#menuBtn {
+  position: absolute;
+  top: 25px;
+  left: 25px;
+  font-size: 18px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+}
+
+#summary {
+  margin-top: 30px;
+}
+  #perfectImg {
+  display: none;
+  width: 120px;     /* hier Größe anpassen */
+  height: auto;
+  margin-top: 20px;
+}
+/* ===== Growth Mindset Skala ===== */
+
+#reflectionSection {
+  margin-top: 40px;
+}
+
+.scale-wrapper {
+  position: relative;
+  max-width: 500px;
+  margin: 30px auto;
+}
+
+.scale-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 40px;
+  position: relative;
+}
+
+.scale-line::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 5%;
+  right: 5%;
+  height: 4px;
+  background: #d1d5db;
+  transform: translateY(-50%);
+  border-radius: 4px;
+  z-index: 0;
+}
+
+.scale-item {
+  cursor: pointer;
+  z-index: 1;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.scale-item:hover {
+  transform: scale(1.2);
+}
+
+.marker {
+  position: absolute;
+  font-size: 22px;
+  transition: left 0.3s ease;
+}
+
+.marker.self {
+  color: black;
+  top: 55px;
+}
+
+.marker.system {
+  color: #16a34a;
+  top: 80px;
+}
+  /* ===== Tablet Keyboard ===== */
+
+#tabletKeyboard {
+  margin-top: 25px;
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+#tabletKeyboard button {
+  width: 70px;
+  height: 60px;
+  font-size: 22px;
+  margin: 6px;
+  border-radius: 18px;
+  background: #f0f9ff;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+  transition: transform 0.1s ease;
+}
+
+#tabletKeyboard button:active {
+  transform: scale(0.95);
+}
+
+.enter-btn {
+  width: 240px !important;
+  background: #bbf7d0 !important;
+}
+</style>
+</head>
+
+<body>
+
+<h1>⚡ Blitzrechnen ⚡</h1>
+
+<div id="modeSelection">
+  <h2>Was möchtest du üben?</h2>
+  <button onclick="chooseMode('addition')">➕ Addition bis 100</button>
+  <button onclick="chooseMode('subtraktion')">➖ Subtraktion bis 100</button>
+  <button onclick="chooseMode('gemischt')">🧠 Zahlenraum 100 – gemischt</button>
+  <button onclick="chooseMode('einmaleins')">✖️ Einmaleins</button>
+</div>
+
+<div id="difficultySelection" style="display:none;">
+  <h2 id="difficultyTitle">Wie möchtest du üben?</h2>
+  <button onclick="setDifficulty(1)">🌱 Einfach</button>
+  <button onclick="setDifficulty(2)">🌿 Mittel</button>
+  <button onclick="setDifficulty(3)">🌳 Schwierig</button>
+</div>
+
+<button id="menuBtn" onclick="goToMenu()">🏠</button>
+
+<div>
+  Anzeigezeit:
+  <button class="duration-btn active" onclick="setDuration(2000,this)">🚀</button>
+  <button class="duration-btn" onclick="setDuration(3500,this)">🐇</button>
+  <button class="duration-btn" onclick="setDuration(4500,this)">🐢</button>
+</div>
+
+<div id="taskDisplay">Bitte Modus wählen</div>
+
+<div>
+  <label style="font-size:20px;">Lösung: </label>
+<input type="text" id="answerInput" inputmode="decimal">
+<button onclick="repeatTask()">🔁 Wiederholen</button>
+</div>
+<div id="tabletKeyboard" style="display:none;">
+  <div class="keyboard-row">
+    <button onclick="pressKey('7')">7</button>
+    <button onclick="pressKey('8')">8</button>
+    <button onclick="pressKey('9')">9</button>
+  </div>
+  <div class="keyboard-row">
+    <button onclick="pressKey('4')">4</button>
+    <button onclick="pressKey('5')">5</button>
+    <button onclick="pressKey('6')">6</button>
+  </div>
+  <div class="keyboard-row">
+    <button onclick="pressKey('1')">1</button>
+    <button onclick="pressKey('2')">2</button>
+    <button onclick="pressKey('3')">3</button>
+  </div>
+  <div class="keyboard-row">
+    <button onclick="pressKey('0')">0</button>
+    <button onclick="deleteKey()">⌫</button>
+  </div>
+  <div class="keyboard-row">
+    <button class="enter-btn" onclick="checkAnswer()">✔</button>
+  </div>
+</div>
+<div id="stats">0 von 10 richtig</div>
+
+<div id="summary" style="display:none;">
+  <p id="finalMessage"></p>
+
+  <div id="reflectionSection" style="display:none;">
+    <h3>🌱 Wie lief es für dich?</h3>
+
+    <div class="scale-wrapper">
+      <div class="scale-line">
+        <div class="scale-item" onclick="selectReflection(1)">🌱</div>
+        <div class="scale-item" onclick="selectReflection(2)">🌿</div>
+        <div class="scale-item" onclick="selectReflection(3)">🌳</div>
+        <div class="scale-item" onclick="selectReflection(4)">🌻</div>
+      </div>
+
+      <div id="selfMarker" class="marker self">▲</div>
+      <div id="systemMarker" class="marker system" style="display:none;">▲</div>
+    </div>
+  </div>
+
+  <img id="perfectImg" src="tiger pokal.png">
+</div>
+
+<script>
+let selfRating = null;
+let totalTasks = 10;
+let currentTask = 0;
+let correctCount = 0;
+let correctAnswer = null;
+let currentMode = null;
+let currentDifficulty = null;
+let currentTaskText = "";
+let displayDuration = 1500;
+let usedTasks = new Set();
+let firstAttemptForCurrentTask = true;
+let taskSolved = false;
+let reflectionLocked = false;
+
+function setDuration(ms,btn){
+  displayDuration = ms;
+  document.querySelectorAll(".duration-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+function chooseMode(mode){
+  currentMode = mode;
+  document.getElementById("modeSelection").style.display = "none";
+  document.getElementById("difficultySelection").style.display = "block";
+  document.getElementById("menuBtn").style.display = "inline";
+  document.getElementById("summary").style.display = "none";
+  document.getElementById("perfectImg").style.display = "none";
+  document.getElementById("reflectionSection").style.display = "none";
+
+  const titles = {
+    addition: "➕ Addition bis 100",
+    subtraktion: "➖ Subtraktion bis 100",
+    gemischt: "🧠 Zahlenraum 100 – gemischt",
+    einmaleins: "✖️ Einmaleins"
+  };
+  document.getElementById("difficultyTitle").textContent =
+    titles[mode] + " – wähle deine Stufe";
+  document.getElementById("taskDisplay").textContent = "Wähle eine Schwierigkeitsstufe";
+}
+
+function setDifficulty(level){
+  currentDifficulty = level;
+  document.getElementById("difficultySelection").style.display = "none";
+  startRound();
+}
+
+function goToMenu(){
+  currentMode = null;
+  currentDifficulty = null;
+  document.getElementById("modeSelection").style.display = "block";
+  document.getElementById("difficultySelection").style.display = "none";
+  document.getElementById("menuBtn").style.display = "none";
+  document.getElementById("summary").style.display = "none";
+  document.getElementById("reflectionSection").style.display = "none";
+  document.getElementById("perfectImg").style.display = "none";
+  document.getElementById("taskDisplay").textContent = "Bitte Modus wählen";
+  document.getElementById("stats").textContent = "0 von 10 beim ersten Versuch richtig";
+  document.getElementById("answerInput").value = "";
+}
+
+function startRound(){
+  currentTask = 0;
+  correctCount = 0;
+  selfRating = null;
+  usedTasks = new Set();
+  firstAttemptForCurrentTask = true;
+  taskSolved = false;
+  reflectionLocked = false;
+
+  document.getElementById("summary").style.display = "none";
+  document.getElementById("reflectionSection").style.display = "none";
+  document.getElementById("perfectImg").style.display = "none";
+  document.getElementById("systemMarker").style.display = "none";
+  document.getElementById("selfMarker").style.left = "0px";
+  document.getElementById("stats").textContent = "0 von 10 beim ersten Versuch richtig";
+  document.querySelectorAll(".scale-item").forEach(item=>{
+    item.style.pointerEvents = "auto";
+    item.style.opacity = "1";
+  });
+
+  nextTask();
+}
+
+function randInt(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function isWholeTen(n){
+  return n % 10 === 0;
+}
+
+function generateTask(){
+  if(currentMode === "addition") return generateAddition(currentDifficulty);
+  if(currentMode === "subtraktion") return generateSubtraktion(currentDifficulty);
+  if(currentMode === "gemischt"){
+    return Math.random() < 0.5
+      ? generateAddition(currentDifficulty)
+      : generateSubtraktion(currentDifficulty);
+  }
+  if(currentMode === "einmaleins") return generateEinmaleins(currentDifficulty);
+}
+
+function generateAddition(level){
+  let a, b, tries = 0;
+
+  // 🌱 Einfach:
+  // Immer eine ganze Zehnerzahl und eine andere Zahl.
+  // Die Zehnerzahl steht zufällig vorne oder hinten.
+  if(level === 1){
+    do{
+      const zehner = randInt(1,9) * 10;
+      const andere = randInt(1,99);
+      if(!isWholeTen(andere) && zehner + andere <= 100){
+        a = zehner;
+        b = andere;
+        break;
+      }
+      tries++;
+    }while(tries < 500);
+
+    if(Math.random() < 0.5) [a,b] = [b,a];
+    correctAnswer = a + b;
+    return `${a} + ${b}`;
+  }
+
+  // 🌿 Mittel:
+  // Zwei Zahlen ohne Zehnerübergang.
+  if(level === 2){
+    tries = 0;
+    do{
+      a = randInt(10,89);
+      b = randInt(10,89);
+      const ohneUebergang = (a % 10) + (b % 10) < 10;
+      if(a + b <= 100 && ohneUebergang) break;
+      tries++;
+    }while(tries < 1000);
+
+    correctAnswer = a + b;
+    return `${a} + ${b}`;
+  }
+
+  // 🌳 Schwierig:
+  // Zwei Zahlen mit Zehnerübergang.
+  tries = 0;
+  do{
+    a = randInt(10,89);
+    b = randInt(10,89);
+    const mitUebergang = (a % 10) + (b % 10) >= 10;
+    if(a + b <= 100 && mitUebergang) break;
+    tries++;
+  }while(tries < 1000);
+
+  correctAnswer = a + b;
+  return `${a} + ${b}`;
+}
+
+function generateSubtraktion(level){
+  let a, b, tries = 0;
+
+  // 🌱 Einfach:
+  // Eine Zahl minus eine ganze Zehnerzahl.
+  if(level === 1){
+    do{
+      a = randInt(11,99);
+      b = randInt(1,9) * 10;
+      if(!isWholeTen(a) && b < a) break;
+      tries++;
+    }while(tries < 500);
+
+    correctAnswer = a - b;
+    return `${a} − ${b}`;
+  }
+
+  // 🌿 Mittel:
+  // Zwei Zahlen ohne Zehnerübergang / Entbündeln.
+  if(level === 2){
+    tries = 0;
+    do{
+      a = randInt(20,99);
+      b = randInt(10,a-1);
+      const ohneUebergang = (a % 10) >= (b % 10);
+      if(ohneUebergang) break;
+      tries++;
+    }while(tries < 1000);
+
+    correctAnswer = a - b;
+    return `${a} − ${b}`;
+  }
+
+  // 🌳 Schwierig:
+  // Zwei Zahlen mit Zehnerübergang / Entbündeln.
+  tries = 0;
+  do{
+    a = randInt(20,99);
+    b = randInt(10,a-1);
+    const mitUebergang = (a % 10) < (b % 10);
+    if(mitUebergang) break;
+    tries++;
+  }while(tries < 1000);
+
+  correctAnswer = a - b;
+  return `${a} − ${b}`;
+}
+
+function weightedChoice(items){
+  const total = items.reduce((sum,item)=>sum+item.weight,0);
+  let r = Math.random()*total;
+  for(const item of items){
+    r -= item.weight;
+    if(r <= 0) return item.value;
+  }
+  return items[items.length-1].value;
+}
+
+function generateEinmaleins(level){
+  let row;
+
+  // 🌱 Kernaufgaben aus Klasse 2: 1er, 2er, 5er, 10er.
+  if(level === 1){
+    row = [1,2,5,10][randInt(0,3)];
+  }
+
+  // 🌿 Zusätzlich 3er und 4er; diese erscheinen etwas häufiger.
+  if(level === 2){
+    row = weightedChoice([
+      {value:1,weight:1},
+      {value:2,weight:1},
+      {value:3,weight:2},
+      {value:4,weight:2},
+      {value:5,weight:1},
+      {value:10,weight:1}
+    ]);
+  }
+
+  // 🌳 Gesamtes kleines Einmaleins 1 bis 10.
+  if(level === 3){
+    row = randInt(1,10);
+  }
+
+  let factor = randInt(1,10);
+
+  // Gelegentlich die Reihenfolge vertauschen:
+  // z. B. 3 · 7 und 7 · 3.
+  let a = row;
+  let b = factor;
+  if(Math.random() < 0.5) [a,b] = [b,a];
+
+  correctAnswer = a * b;
+  return `${a} · ${b}`;
+}
+
+function nextTask(){
+  if(currentTask >= totalTasks){
+    endRound();
+    return;
+  }
+
+  const input = document.getElementById("answerInput");
+  input.value = "";
+  input.classList.remove("wrong");
+  input.disabled = true;
+  firstAttemptForCurrentTask = true;
+  taskSolved = false;
+
+  let newTask;
+  let safety = 0;
+
+  do{
+    newTask = generateTask();
+    safety++;
+  }while(usedTasks.has(newTask) && safety < 100);
+
+  usedTasks.add(newTask);
+  currentTaskText = newTask;
+
+  document.getElementById("taskDisplay").textContent = currentTaskText;
+
+  setTimeout(()=>{
+    document.getElementById("taskDisplay").textContent = "";
+    input.disabled = false;
+    input.focus();
+  },displayDuration);
+}
+
+function checkAnswer(){
+  const input = document.getElementById("answerInput");
+
+  // Nach gelöster Aufgabe keine weitere Wertung derselben Aufgabe zulassen.
+  if(taskSolved || currentTask >= totalTasks || input.disabled) return;
+
+  const raw = input.value.trim().replace(",",".");
+  if(raw === "") return;
+
+  const value = parseInt(raw,10);
+  if(Number.isNaN(value)) return;
+
+  // Während die Rückmeldung verarbeitet wird, weitere Klicks blockieren.
+  input.disabled = true;
+
+  if(value === correctAnswer){
+    taskSolved = true;
+
+    // Für die Leistungsanzeige zählt nur der erste Versuch.
+    if(firstAttemptForCurrentTask){
+      correctCount++;
+    }
+
+    document.getElementById("taskDisplay").textContent = "Richtig! ✅";
+    input.classList.remove("wrong");
+
+    // Genau eine Aufgabe der 10er-Runde abschließen.
+    currentTask = Math.min(currentTask + 1, totalTasks);
+    document.getElementById("stats").textContent =
+      `${correctCount} von ${totalTasks} beim ersten Versuch richtig`;
+
+    setTimeout(()=>{
+      if(currentTask >= totalTasks){
+        endRound();
+      }else{
+        nextTask();
+      }
+    },1200);
+
+  }else{
+    // Falscher Versuch beendet die Aufgabe NICHT.
+    firstAttemptForCurrentTask = false;
+    input.classList.add("wrong");
+    document.getElementById("taskDisplay").textContent =
+      "Noch nicht richtig – versuche es noch einmal. ❌";
+
+    setTimeout(()=>{
+      input.value = "";
+      input.classList.remove("wrong");
+      input.disabled = false;
+      document.getElementById("taskDisplay").textContent =
+        "Du kannst die Aufgabe wiederholen oder noch einmal antworten.";
+      input.focus();
+    },1100);
+  }
+}
+
+function repeatTask(){
+  if(!currentTaskText) return;
+  const input = document.getElementById("answerInput");
+  input.disabled = true;
+  document.getElementById("taskDisplay").textContent = currentTaskText;
+
+  setTimeout(()=>{
+    document.getElementById("taskDisplay").textContent = "";
+    input.disabled = false;
+    input.focus();
+  },displayDuration);
+}
+
+function endRound(){
+  taskSolved = true;
+  document.getElementById("answerInput").disabled = true;
+  document.getElementById("taskDisplay").textContent = "Geschafft! 🎉";
+  document.getElementById("summary").style.display = "block";
+  document.getElementById("finalMessage").textContent =
+    `🎉 Fertig! ${correctCount} von ${totalTasks} Aufgaben waren beim ersten Versuch richtig.`;
+
+  if(correctCount === totalTasks){
+    document.getElementById("perfectImg").style.display = "block";
+  }else{
+    document.getElementById("perfectImg").style.display = "none";
+  }
+
+  document.getElementById("reflectionSection").style.display = "block";
+  document.getElementById("systemMarker").style.display = "none";
+}
+
+function selectReflection(level){
+  if(reflectionLocked) return;
+
+  selfRating = level;
+  reflectionLocked = true;
+  positionSelfMarker(level);
+
+  // Die App zeigt ihre Einschätzung bewusst erst NACH der Selbsteinschätzung.
+  document.getElementById("systemMarker").style.display = "block";
+  positionSystemMarker();
+
+  // Weitere Änderungen der Selbsteinschätzung verhindern.
+  document.querySelectorAll(".scale-item").forEach(item=>{
+    item.style.pointerEvents = "none";
+    item.style.opacity = "0.92";
+  });
+}
+
+function getSystemLevel(){
+  if(correctCount <= 3) return 1;
+  if(correctCount <= 6) return 2;
+  if(correctCount <= 8) return 3;
+  return 4;
+}
+
+function positionSelfMarker(level){
+  const items = document.querySelectorAll(".scale-item");
+  const marker = document.getElementById("selfMarker");
+  const rect = items[level-1].getBoundingClientRect();
+  const wrapperRect = document.querySelector(".scale-wrapper").getBoundingClientRect();
+  const center = rect.left - wrapperRect.left + rect.width / 2;
+  marker.style.left = (center - marker.offsetWidth / 2) + "px";
+}
+
+function positionSystemMarker(){
+  const systemLevel = getSystemLevel();
+  const items = document.querySelectorAll(".scale-item");
+  const marker = document.getElementById("systemMarker");
+  const rect = items[systemLevel-1].getBoundingClientRect();
+  const wrapperRect = document.querySelector(".scale-wrapper").getBoundingClientRect();
+  const center = rect.left - wrapperRect.left + rect.width / 2;
+  marker.style.left = (center - marker.offsetWidth / 2) + "px";
+}
+
+window.addEventListener("load", function(){
+  const input = document.getElementById("answerInput");
+  document.getElementById("menuBtn").style.display = "none";
+
+  if(('ontouchstart' in window) || navigator.maxTouchPoints > 0){
+    document.getElementById("tabletKeyboard").style.display = "block";
+    input.setAttribute("readonly", true);
+  }else{
+    input.removeAttribute("readonly");
+  }
+});
+
+function pressKey(key){
+  const input = document.getElementById("answerInput");
+  if(input.disabled) return;
+  input.value += key;
+}
+
+function deleteKey(){
+  const input = document.getElementById("answerInput");
+  if(input.disabled) return;
+  input.value = input.value.slice(0,-1);
+}
+
+document.addEventListener("keydown", function(e){
+  const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+  if(!isTouch && e.key === "Enter"){
+    const input = document.getElementById("answerInput");
+    if(!input.disabled && input.value.trim() !== ""){
+      checkAnswer();
+    }
+  }
+});
+</script>
+</body>
+</html>
