@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Blitzrechnen</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+
 <style>
 body {
   font-family: 'Fredoka One', sans-serif;
@@ -100,12 +101,14 @@ button:hover {
 #summary {
   margin-top: 30px;
 }
-  #perfectImg {
+
+#perfectImg {
   display: none;
-  width: 120px;     /* hier Größe anpassen */
+  width: 120px;
   height: auto;
   margin-top: 20px;
 }
+
 /* ===== Growth Mindset Skala ===== */
 
 #reflectionSection {
@@ -163,7 +166,8 @@ button:hover {
   color: #16a34a;
   top: 80px;
 }
-  /* ===== Tablet Keyboard ===== */
+
+/* ===== Tablet Keyboard ===== */
 
 #tabletKeyboard {
   margin-top: 25px;
@@ -203,14 +207,27 @@ button:hover {
 
 <div id="modeSelection">
   <h2>Was möchtest du üben?</h2>
-  <button onclick="chooseMode('addition')">➕ Addition bis 100</button>
-  <button onclick="chooseMode('subtraktion')">➖ Subtraktion bis 100</button>
-  <button onclick="chooseMode('gemischt')">🧠 Zahlenraum 100 – gemischt</button>
-  <button onclick="chooseMode('einmaleins')">✖️ Einmaleins</button>
+
+  <button onclick="chooseMode('addition100')">
+    ➕ Addition bis 100
+  </button>
+
+  <button onclick="chooseMode('subtraktion100')">
+    ➖ Subtraktion bis 100
+  </button>
+
+  <button onclick="chooseMode('addition1000')">
+    ➕ Addition bis 1000
+  </button>
+
+  <button onclick="chooseMode('subtraktion1000')">
+    ➖ Subtraktion bis 1000
+  </button>
 </div>
 
 <div id="difficultySelection" style="display:none;">
   <h2 id="difficultyTitle">Wie möchtest du üben?</h2>
+
   <button onclick="setDifficulty(1)">🌱 Einfach</button>
   <button onclick="setDifficulty(2)">🌿 Mittel</button>
   <button onclick="setDifficulty(3)">🌳 Schwierig</button>
@@ -229,33 +246,39 @@ button:hover {
 
 <div>
   <label style="font-size:20px;">Lösung: </label>
-<input type="text" id="answerInput" inputmode="decimal">
-<button onclick="repeatTask()">🔁 Wiederholen</button>
+  <input type="text" id="answerInput" inputmode="decimal">
+  <button onclick="repeatTask()">🔁 Wiederholen</button>
 </div>
+
 <div id="tabletKeyboard" style="display:none;">
   <div class="keyboard-row">
     <button onclick="pressKey('7')">7</button>
     <button onclick="pressKey('8')">8</button>
     <button onclick="pressKey('9')">9</button>
   </div>
+
   <div class="keyboard-row">
     <button onclick="pressKey('4')">4</button>
     <button onclick="pressKey('5')">5</button>
     <button onclick="pressKey('6')">6</button>
   </div>
+
   <div class="keyboard-row">
     <button onclick="pressKey('1')">1</button>
     <button onclick="pressKey('2')">2</button>
     <button onclick="pressKey('3')">3</button>
   </div>
+
   <div class="keyboard-row">
     <button onclick="pressKey('0')">0</button>
     <button onclick="deleteKey()">⌫</button>
   </div>
+
   <div class="keyboard-row">
     <button class="enter-btn" onclick="checkAnswer()">✔</button>
   </div>
 </div>
+
 <div id="stats">0 von 10 richtig</div>
 
 <div id="summary" style="display:none;">
@@ -280,7 +303,13 @@ button:hover {
   <img id="perfectImg" src="tiger pokal.png">
 </div>
 
+
 <script>
+
+/* =========================================================
+   GRUNDWERTE
+   ========================================================= */
+
 let selfRating = null;
 let totalTasks = 10;
 let currentTask = 0;
@@ -289,20 +318,39 @@ let correctAnswer = null;
 let currentMode = null;
 let currentDifficulty = null;
 let currentTaskText = "";
-let displayDuration = 1500;
+
+/* Rakete = 2 Sekunden */
+let displayDuration = 2000;
+
 let usedTasks = new Set();
 let firstAttemptForCurrentTask = true;
 let taskSolved = false;
 let reflectionLocked = false;
 
+
+/* =========================================================
+   ANZEIGEZEIT
+   ========================================================= */
+
 function setDuration(ms,btn){
   displayDuration = ms;
-  document.querySelectorAll(".duration-btn").forEach(b=>b.classList.remove("active"));
+
+  document.querySelectorAll(".duration-btn").forEach(
+    b => b.classList.remove("active")
+  );
+
   btn.classList.add("active");
 }
 
+
+/* =========================================================
+   MODUS AUSWÄHLEN
+   ========================================================= */
+
 function chooseMode(mode){
+
   currentMode = mode;
+
   document.getElementById("modeSelection").style.display = "none";
   document.getElementById("difficultySelection").style.display = "block";
   document.getElementById("menuBtn").style.display = "inline";
@@ -311,41 +359,72 @@ function chooseMode(mode){
   document.getElementById("reflectionSection").style.display = "none";
 
   const titles = {
-    addition: "➕ Addition bis 100",
-    subtraktion: "➖ Subtraktion bis 100",
-    gemischt: "🧠 Zahlenraum 100 – gemischt",
-    einmaleins: "✖️ Einmaleins"
+    addition100: "➕ Addition bis 100",
+    subtraktion100: "➖ Subtraktion bis 100",
+    addition1000: "➕ Addition bis 1000",
+    subtraktion1000: "➖ Subtraktion bis 1000"
   };
+
   document.getElementById("difficultyTitle").textContent =
     titles[mode] + " – wähle deine Stufe";
-  document.getElementById("taskDisplay").textContent = "Wähle eine Schwierigkeitsstufe";
+
+  document.getElementById("taskDisplay").textContent =
+    "Wähle eine Schwierigkeitsstufe";
 }
 
+
+/* =========================================================
+   SCHWIERIGKEIT AUSWÄHLEN
+   ========================================================= */
+
 function setDifficulty(level){
+
   currentDifficulty = level;
+
   document.getElementById("difficultySelection").style.display = "none";
+
   startRound();
 }
 
+
+/* =========================================================
+   ZURÜCK ZUM HAUPTMENÜ
+   ========================================================= */
+
 function goToMenu(){
+
   currentMode = null;
   currentDifficulty = null;
+
   document.getElementById("modeSelection").style.display = "block";
   document.getElementById("difficultySelection").style.display = "none";
   document.getElementById("menuBtn").style.display = "none";
   document.getElementById("summary").style.display = "none";
   document.getElementById("reflectionSection").style.display = "none";
   document.getElementById("perfectImg").style.display = "none";
-  document.getElementById("taskDisplay").textContent = "Bitte Modus wählen";
-  document.getElementById("stats").textContent = "0 von 10 beim ersten Versuch richtig";
+
+  document.getElementById("taskDisplay").textContent =
+    "Bitte Modus wählen";
+
+  document.getElementById("stats").textContent =
+    "0 von 10 beim ersten Versuch richtig";
+
   document.getElementById("answerInput").value = "";
 }
 
+
+/* =========================================================
+   NEUE RUNDE
+   ========================================================= */
+
 function startRound(){
+
   currentTask = 0;
   correctCount = 0;
   selfRating = null;
+
   usedTasks = new Set();
+
   firstAttemptForCurrentTask = true;
   taskSolved = false;
   reflectionLocked = false;
@@ -354,8 +433,12 @@ function startRound(){
   document.getElementById("reflectionSection").style.display = "none";
   document.getElementById("perfectImg").style.display = "none";
   document.getElementById("systemMarker").style.display = "none";
+
   document.getElementById("selfMarker").style.left = "0px";
-  document.getElementById("stats").textContent = "0 von 10 beim ersten Versuch richtig";
+
+  document.getElementById("stats").textContent =
+    "0 von 10 beim ersten Versuch richtig";
+
   document.querySelectorAll(".scale-item").forEach(item=>{
     item.style.pointerEvents = "auto";
     item.style.opacity = "1";
@@ -364,184 +447,519 @@ function startRound(){
   nextTask();
 }
 
+
+/* =========================================================
+   HILFSFUNKTIONEN
+   ========================================================= */
+
 function randInt(min,max){
-  return Math.floor(Math.random()*(max-min+1))+min;
+  return Math.floor(Math.random() * (max-min+1)) + min;
 }
 
 function isWholeTen(n){
   return n % 10 === 0;
 }
 
-function generateTask(){
-  if(currentMode === "addition") return generateAddition(currentDifficulty);
-  if(currentMode === "subtraktion") return generateSubtraktion(currentDifficulty);
-  if(currentMode === "gemischt"){
-    return Math.random() < 0.5
-      ? generateAddition(currentDifficulty)
-      : generateSubtraktion(currentDifficulty);
-  }
-  if(currentMode === "einmaleins") return generateEinmaleins(currentDifficulty);
+function isWholeHundred(n){
+  return n % 100 === 0;
 }
 
-function generateAddition(level){
+
+/* =========================================================
+   PASSENDEN AUFGABENGENERATOR AUSWÄHLEN
+   ========================================================= */
+
+function generateTask(){
+
+  if(currentMode === "addition100"){
+    return generateAddition100(currentDifficulty);
+  }
+
+  if(currentMode === "subtraktion100"){
+    return generateSubtraktion100(currentDifficulty);
+  }
+
+  if(currentMode === "addition1000"){
+    return generateAddition1000(currentDifficulty);
+  }
+
+  if(currentMode === "subtraktion1000"){
+    return generateSubtraktion1000(currentDifficulty);
+  }
+}
+
+
+/* =========================================================
+   ADDITION BIS 100
+   ========================================================= */
+
+function generateAddition100(level){
+
   let a, b, tries = 0;
 
-  // 🌱 Einfach:
-  // Immer eine ganze Zehnerzahl und eine andere Zahl.
-  // Die Zehnerzahl steht zufällig vorne oder hinten.
+  /* 🌱 EINFACH
+     Ganze Zehnerzahl + andere Zahl.
+     Die Zehnerzahl kann vorne oder hinten stehen.
+  */
+
   if(level === 1){
+
     do{
       const zehner = randInt(1,9) * 10;
       const andere = randInt(1,99);
+
       if(!isWholeTen(andere) && zehner + andere <= 100){
         a = zehner;
         b = andere;
         break;
       }
+
       tries++;
+
     }while(tries < 500);
 
-    if(Math.random() < 0.5) [a,b] = [b,a];
+    if(Math.random() < 0.5){
+      [a,b] = [b,a];
+    }
+
     correctAnswer = a + b;
+
     return `${a} + ${b}`;
   }
 
-  // 🌿 Mittel:
-  // Zwei Zahlen ohne Zehnerübergang.
+
+  /* 🌿 MITTEL
+     Zwei Zahlen ohne Zehnerübergang.
+  */
+
   if(level === 2){
+
     tries = 0;
+
     do{
       a = randInt(10,89);
       b = randInt(10,89);
-      const ohneUebergang = (a % 10) + (b % 10) < 10;
-      if(a + b <= 100 && ohneUebergang) break;
+
+      const ohneUebergang =
+        (a % 10) + (b % 10) < 10;
+
+      if(a + b <= 100 && ohneUebergang){
+        break;
+      }
+
       tries++;
+
     }while(tries < 1000);
 
     correctAnswer = a + b;
+
     return `${a} + ${b}`;
   }
 
-  // 🌳 Schwierig:
-  // Zwei Zahlen mit Zehnerübergang.
+
+  /* 🌳 SCHWIERIG
+     Zwei Zahlen mit Zehnerübergang.
+  */
+
   tries = 0;
+
   do{
     a = randInt(10,89);
     b = randInt(10,89);
-    const mitUebergang = (a % 10) + (b % 10) >= 10;
-    if(a + b <= 100 && mitUebergang) break;
+
+    const mitUebergang =
+      (a % 10) + (b % 10) >= 10;
+
+    if(a + b <= 100 && mitUebergang){
+      break;
+    }
+
     tries++;
+
   }while(tries < 1000);
 
   correctAnswer = a + b;
+
   return `${a} + ${b}`;
 }
 
-function generateSubtraktion(level){
+
+/* =========================================================
+   SUBTRAKTION BIS 100
+   ========================================================= */
+
+function generateSubtraktion100(level){
+
   let a, b, tries = 0;
 
-  // 🌱 Einfach:
-  // Eine Zahl minus eine ganze Zehnerzahl.
+  /* 🌱 EINFACH
+     Eine Zahl minus eine ganze Zehnerzahl.
+  */
+
   if(level === 1){
+
     do{
       a = randInt(11,99);
       b = randInt(1,9) * 10;
-      if(!isWholeTen(a) && b < a) break;
+
+      if(!isWholeTen(a) && b < a){
+        break;
+      }
+
       tries++;
+
     }while(tries < 500);
 
     correctAnswer = a - b;
+
     return `${a} − ${b}`;
   }
 
-  // 🌿 Mittel:
-  // Zwei Zahlen ohne Zehnerübergang / Entbündeln.
+
+  /* 🌿 MITTEL
+     Ohne Zehnerübergang / Entbündeln.
+  */
+
   if(level === 2){
+
     tries = 0;
+
     do{
       a = randInt(20,99);
       b = randInt(10,a-1);
-      const ohneUebergang = (a % 10) >= (b % 10);
-      if(ohneUebergang) break;
+
+      const ohneUebergang =
+        (a % 10) >= (b % 10);
+
+      if(ohneUebergang){
+        break;
+      }
+
       tries++;
+
     }while(tries < 1000);
 
     correctAnswer = a - b;
+
     return `${a} − ${b}`;
   }
 
-  // 🌳 Schwierig:
-  // Zwei Zahlen mit Zehnerübergang / Entbündeln.
+
+  /* 🌳 SCHWIERIG
+     Mit Zehnerübergang / Entbündeln.
+  */
+
   tries = 0;
+
   do{
     a = randInt(20,99);
     b = randInt(10,a-1);
-    const mitUebergang = (a % 10) < (b % 10);
-    if(mitUebergang) break;
+
+    const mitUebergang =
+      (a % 10) < (b % 10);
+
+    if(mitUebergang){
+      break;
+    }
+
     tries++;
+
   }while(tries < 1000);
 
   correctAnswer = a - b;
+
   return `${a} − ${b}`;
 }
 
-function weightedChoice(items){
-  const total = items.reduce((sum,item)=>sum+item.weight,0);
-  let r = Math.random()*total;
-  for(const item of items){
-    r -= item.weight;
-    if(r <= 0) return item.value;
-  }
-  return items[items.length-1].value;
-}
 
-function generateEinmaleins(level){
-  let row;
+/* =========================================================
+   ADDITION BIS 1000
+   ========================================================= */
 
-  // 🌱 Kernaufgaben aus Klasse 2: 1er, 2er, 5er, 10er.
+function generateAddition1000(level){
+
+  let a, b, tries = 0;
+
+  /* 🌱 EINFACH
+     Ganze Hunderterzahl + andere Zahl.
+     Die Hunderterzahl kann vorne oder hinten stehen.
+     Ergebnis maximal 1000.
+  */
+
   if(level === 1){
-    row = [1,2,5,10][randInt(0,3)];
+
+    do{
+      const hunderter = randInt(1,9) * 100;
+      const andere = randInt(1,999);
+
+      if(
+        !isWholeHundred(andere) &&
+        hunderter + andere <= 1000
+      ){
+        a = hunderter;
+        b = andere;
+        break;
+      }
+
+      tries++;
+
+    }while(tries < 1000);
+
+    if(Math.random() < 0.5){
+      [a,b] = [b,a];
+    }
+
+    correctAnswer = a + b;
+
+    return `${a} + ${b}`;
   }
 
-  // 🌿 Zusätzlich 3er und 4er; diese erscheinen etwas häufiger.
+
+  /* 🌿 MITTEL
+     Addition ohne Übertrag.
+
+     Einer + Einer < 10
+     Zehner + Zehner < 10
+     Gesamtergebnis maximal 1000.
+  */
+
   if(level === 2){
-    row = weightedChoice([
-      {value:1,weight:1},
-      {value:2,weight:1},
-      {value:3,weight:2},
-      {value:4,weight:2},
-      {value:5,weight:1},
-      {value:10,weight:1}
-    ]);
+
+    tries = 0;
+
+    do{
+      a = randInt(100,899);
+      b = randInt(100,899);
+
+      const einerOhneUebertrag =
+        (a % 10) + (b % 10) < 10;
+
+      const zehnerA =
+        Math.floor(a / 10) % 10;
+
+      const zehnerB =
+        Math.floor(b / 10) % 10;
+
+      const zehnerOhneUebertrag =
+        zehnerA + zehnerB < 10;
+
+      if(
+        a + b <= 1000 &&
+        einerOhneUebertrag &&
+        zehnerOhneUebertrag
+      ){
+        break;
+      }
+
+      tries++;
+
+    }while(tries < 2000);
+
+    correctAnswer = a + b;
+
+    return `${a} + ${b}`;
   }
 
-  // 🌳 Gesamtes kleines Einmaleins 1 bis 10.
-  if(level === 3){
-    row = randInt(1,10);
-  }
 
-  let factor = randInt(1,10);
+  /* 🌳 SCHWIERIG
+     Mindestens ein Übertrag:
+     entweder bei den Einern oder bei den Zehnern.
+  */
 
-  // Gelegentlich die Reihenfolge vertauschen:
-  // z. B. 3 · 7 und 7 · 3.
-  let a = row;
-  let b = factor;
-  if(Math.random() < 0.5) [a,b] = [b,a];
+  tries = 0;
 
-  correctAnswer = a * b;
-  return `${a} · ${b}`;
+  do{
+    a = randInt(100,899);
+    b = randInt(100,899);
+
+    const einerUebertrag =
+      (a % 10) + (b % 10) >= 10;
+
+    const zehnerA =
+      Math.floor(a / 10) % 10;
+
+    const zehnerB =
+      Math.floor(b / 10) % 10;
+
+    const zehnerUebertrag =
+      zehnerA + zehnerB >= 10;
+
+    const mindestensEinUebertrag =
+      einerUebertrag || zehnerUebertrag;
+
+    if(
+      a + b <= 1000 &&
+      mindestensEinUebertrag
+    ){
+      break;
+    }
+
+    tries++;
+
+  }while(tries < 2000);
+
+  correctAnswer = a + b;
+
+  return `${a} + ${b}`;
 }
+
+
+/* =========================================================
+   SUBTRAKTION BIS 1000
+   ========================================================= */
+
+function generateSubtraktion1000(level){
+
+  let a, b, tries = 0;
+
+  /* 🌱 EINFACH
+     Eine Zahl minus eine ganze Hunderterzahl.
+     Keine negativen Ergebnisse.
+  */
+
+  if(level === 1){
+
+    do{
+      a = randInt(101,999);
+      b = randInt(1,9) * 100;
+
+      if(
+        !isWholeHundred(a) &&
+        b < a
+      ){
+        break;
+      }
+
+      tries++;
+
+    }while(tries < 1000);
+
+    correctAnswer = a - b;
+
+    return `${a} − ${b}`;
+  }
+
+
+  /* 🌿 MITTEL
+     Subtraktion ohne Entbündeln.
+
+     Einer der ersten Zahl >= Einer der zweiten Zahl.
+     Zehner der ersten Zahl >= Zehner der zweiten Zahl.
+     Hunderter der ersten Zahl >= Hunderter der zweiten Zahl.
+  */
+
+  if(level === 2){
+
+    tries = 0;
+
+    do{
+      a = randInt(200,999);
+      b = randInt(100,a-1);
+
+      const einerA =
+        a % 10;
+
+      const einerB =
+        b % 10;
+
+      const zehnerA =
+        Math.floor(a / 10) % 10;
+
+      const zehnerB =
+        Math.floor(b / 10) % 10;
+
+      const hunderterA =
+        Math.floor(a / 100);
+
+      const hunderterB =
+        Math.floor(b / 100);
+
+      const ohneEntbuendeln =
+        einerA >= einerB &&
+        zehnerA >= zehnerB &&
+        hunderterA >= hunderterB;
+
+      if(ohneEntbuendeln){
+        break;
+      }
+
+      tries++;
+
+    }while(tries < 2000);
+
+    correctAnswer = a - b;
+
+    return `${a} − ${b}`;
+  }
+
+
+  /* 🌳 SCHWIERIG
+     Mindestens einmal Entbündeln.
+
+     Das ist der Fall, wenn bei den Einern oder
+     Zehnern die obere Ziffer kleiner ist als
+     die untere Ziffer.
+  */
+
+  tries = 0;
+
+  do{
+    a = randInt(200,999);
+    b = randInt(100,a-1);
+
+    const einerA =
+      a % 10;
+
+    const einerB =
+      b % 10;
+
+    const zehnerA =
+      Math.floor(a / 10) % 10;
+
+    const zehnerB =
+      Math.floor(b / 10) % 10;
+
+    const entbuendelnEiner =
+      einerA < einerB;
+
+    const entbuendelnZehner =
+      zehnerA < zehnerB;
+
+    const mindestensEinEntbuendeln =
+      entbuendelnEiner || entbuendelnZehner;
+
+    if(mindestensEinEntbuendeln){
+      break;
+    }
+
+    tries++;
+
+  }while(tries < 2000);
+
+  correctAnswer = a - b;
+
+  return `${a} − ${b}`;
+}
+
+
+/* =========================================================
+   NÄCHSTE AUFGABE
+   ========================================================= */
 
 function nextTask(){
+
   if(currentTask >= totalTasks){
     endRound();
     return;
   }
 
-  const input = document.getElementById("answerInput");
+  const input =
+    document.getElementById("answerInput");
+
   input.value = "";
   input.classList.remove("wrong");
   input.disabled = true;
+
   firstAttemptForCurrentTask = true;
   taskSolved = false;
 
@@ -551,186 +969,383 @@ function nextTask(){
   do{
     newTask = generateTask();
     safety++;
-  }while(usedTasks.has(newTask) && safety < 100);
+
+  }while(
+    usedTasks.has(newTask) &&
+    safety < 100
+  );
 
   usedTasks.add(newTask);
+
   currentTaskText = newTask;
 
-  document.getElementById("taskDisplay").textContent = currentTaskText;
+  document.getElementById("taskDisplay").textContent =
+    currentTaskText;
 
   setTimeout(()=>{
+
     document.getElementById("taskDisplay").textContent = "";
+
     input.disabled = false;
     input.focus();
+
   },displayDuration);
 }
 
+
+/* =========================================================
+   ANTWORT PRÜFEN
+   ========================================================= */
+
 function checkAnswer(){
-  const input = document.getElementById("answerInput");
 
-  // Nach gelöster Aufgabe keine weitere Wertung derselben Aufgabe zulassen.
-  if(taskSolved || currentTask >= totalTasks || input.disabled) return;
+  const input =
+    document.getElementById("answerInput");
 
-  const raw = input.value.trim().replace(",",".");
-  if(raw === "") return;
+  if(
+    taskSolved ||
+    currentTask >= totalTasks ||
+    input.disabled
+  ){
+    return;
+  }
 
-  const value = parseInt(raw,10);
-  if(Number.isNaN(value)) return;
+  const raw =
+    input.value.trim().replace(",",".");
 
-  // Während die Rückmeldung verarbeitet wird, weitere Klicks blockieren.
+  if(raw === ""){
+    return;
+  }
+
+  const value =
+    parseInt(raw,10);
+
+  if(Number.isNaN(value)){
+    return;
+  }
+
   input.disabled = true;
 
+
+  /* RICHTIGE ANTWORT */
+
   if(value === correctAnswer){
+
     taskSolved = true;
 
-    // Für die Leistungsanzeige zählt nur der erste Versuch.
     if(firstAttemptForCurrentTask){
       correctCount++;
     }
 
-    document.getElementById("taskDisplay").textContent = "Richtig! ✅";
+    document.getElementById("taskDisplay").textContent =
+      "Richtig! ✅";
+
     input.classList.remove("wrong");
 
-    // Genau eine Aufgabe der 10er-Runde abschließen.
-    currentTask = Math.min(currentTask + 1, totalTasks);
+    currentTask =
+      Math.min(currentTask + 1,totalTasks);
+
     document.getElementById("stats").textContent =
       `${correctCount} von ${totalTasks} beim ersten Versuch richtig`;
 
     setTimeout(()=>{
+
       if(currentTask >= totalTasks){
         endRound();
       }else{
         nextTask();
       }
+
     },1200);
 
+
+  /* FALSCHE ANTWORT */
+
   }else{
-    // Falscher Versuch beendet die Aufgabe NICHT.
+
     firstAttemptForCurrentTask = false;
+
     input.classList.add("wrong");
+
     document.getElementById("taskDisplay").textContent =
       "Noch nicht richtig – versuche es noch einmal. ❌";
 
     setTimeout(()=>{
+
       input.value = "";
       input.classList.remove("wrong");
       input.disabled = false;
+
       document.getElementById("taskDisplay").textContent =
         "Du kannst die Aufgabe wiederholen oder noch einmal antworten.";
+
       input.focus();
+
     },1100);
   }
 }
 
+
+/* =========================================================
+   AUFGABE WIEDERHOLEN
+   ========================================================= */
+
 function repeatTask(){
-  if(!currentTaskText) return;
-  const input = document.getElementById("answerInput");
+
+  if(!currentTaskText){
+    return;
+  }
+
+  const input =
+    document.getElementById("answerInput");
+
   input.disabled = true;
-  document.getElementById("taskDisplay").textContent = currentTaskText;
+
+  document.getElementById("taskDisplay").textContent =
+    currentTaskText;
 
   setTimeout(()=>{
+
     document.getElementById("taskDisplay").textContent = "";
+
     input.disabled = false;
     input.focus();
+
   },displayDuration);
 }
 
+
+/* =========================================================
+   RUNDE BEENDEN
+   ========================================================= */
+
 function endRound(){
+
   taskSolved = true;
+
   document.getElementById("answerInput").disabled = true;
-  document.getElementById("taskDisplay").textContent = "Geschafft! 🎉";
-  document.getElementById("summary").style.display = "block";
+
+  document.getElementById("taskDisplay").textContent =
+    "Geschafft! 🎉";
+
+  document.getElementById("summary").style.display =
+    "block";
+
   document.getElementById("finalMessage").textContent =
     `🎉 Fertig! ${correctCount} von ${totalTasks} Aufgaben waren beim ersten Versuch richtig.`;
 
   if(correctCount === totalTasks){
-    document.getElementById("perfectImg").style.display = "block";
+
+    document.getElementById("perfectImg").style.display =
+      "block";
+
   }else{
-    document.getElementById("perfectImg").style.display = "none";
+
+    document.getElementById("perfectImg").style.display =
+      "none";
   }
 
-  document.getElementById("reflectionSection").style.display = "block";
-  document.getElementById("systemMarker").style.display = "none";
+  document.getElementById("reflectionSection").style.display =
+    "block";
+
+  document.getElementById("systemMarker").style.display =
+    "none";
 }
 
+
+/* =========================================================
+   SELBSTEINSCHÄTZUNG
+   ========================================================= */
+
 function selectReflection(level){
-  if(reflectionLocked) return;
+
+  if(reflectionLocked){
+    return;
+  }
 
   selfRating = level;
   reflectionLocked = true;
+
   positionSelfMarker(level);
 
-  // Die App zeigt ihre Einschätzung bewusst erst NACH der Selbsteinschätzung.
-  document.getElementById("systemMarker").style.display = "block";
+  /*
+    Einschätzung des Programms wird bewusst
+    erst nach der Selbsteinschätzung gezeigt.
+  */
+
+  document.getElementById("systemMarker").style.display =
+    "block";
+
   positionSystemMarker();
 
-  // Weitere Änderungen der Selbsteinschätzung verhindern.
   document.querySelectorAll(".scale-item").forEach(item=>{
     item.style.pointerEvents = "none";
     item.style.opacity = "0.92";
   });
 }
 
+
+/* =========================================================
+   SYSTEMEINSCHÄTZUNG
+   ========================================================= */
+
 function getSystemLevel(){
-  if(correctCount <= 3) return 1;
-  if(correctCount <= 6) return 2;
-  if(correctCount <= 8) return 3;
+
+  if(correctCount <= 3){
+    return 1;
+  }
+
+  if(correctCount <= 6){
+    return 2;
+  }
+
+  if(correctCount <= 8){
+    return 3;
+  }
+
   return 4;
 }
 
+
+/* =========================================================
+   MARKER POSITIONIEREN
+   ========================================================= */
+
 function positionSelfMarker(level){
-  const items = document.querySelectorAll(".scale-item");
-  const marker = document.getElementById("selfMarker");
-  const rect = items[level-1].getBoundingClientRect();
-  const wrapperRect = document.querySelector(".scale-wrapper").getBoundingClientRect();
-  const center = rect.left - wrapperRect.left + rect.width / 2;
-  marker.style.left = (center - marker.offsetWidth / 2) + "px";
+
+  const items =
+    document.querySelectorAll(".scale-item");
+
+  const marker =
+    document.getElementById("selfMarker");
+
+  const rect =
+    items[level-1].getBoundingClientRect();
+
+  const wrapperRect =
+    document.querySelector(".scale-wrapper").getBoundingClientRect();
+
+  const center =
+    rect.left - wrapperRect.left + rect.width / 2;
+
+  marker.style.left =
+    (center - marker.offsetWidth / 2) + "px";
 }
+
 
 function positionSystemMarker(){
-  const systemLevel = getSystemLevel();
-  const items = document.querySelectorAll(".scale-item");
-  const marker = document.getElementById("systemMarker");
-  const rect = items[systemLevel-1].getBoundingClientRect();
-  const wrapperRect = document.querySelector(".scale-wrapper").getBoundingClientRect();
-  const center = rect.left - wrapperRect.left + rect.width / 2;
-  marker.style.left = (center - marker.offsetWidth / 2) + "px";
+
+  const systemLevel =
+    getSystemLevel();
+
+  const items =
+    document.querySelectorAll(".scale-item");
+
+  const marker =
+    document.getElementById("systemMarker");
+
+  const rect =
+    items[systemLevel-1].getBoundingClientRect();
+
+  const wrapperRect =
+    document.querySelector(".scale-wrapper").getBoundingClientRect();
+
+  const center =
+    rect.left - wrapperRect.left + rect.width / 2;
+
+  marker.style.left =
+    (center - marker.offsetWidth / 2) + "px";
 }
 
-window.addEventListener("load", function(){
-  const input = document.getElementById("answerInput");
-  document.getElementById("menuBtn").style.display = "none";
 
-  if(('ontouchstart' in window) || navigator.maxTouchPoints > 0){
-    document.getElementById("tabletKeyboard").style.display = "block";
-    input.setAttribute("readonly", true);
+/* =========================================================
+   TABLET / TOUCH ERKENNEN
+   ========================================================= */
+
+window.addEventListener("load",function(){
+
+  const input =
+    document.getElementById("answerInput");
+
+  document.getElementById("menuBtn").style.display =
+    "none";
+
+  if(
+    ('ontouchstart' in window) ||
+    navigator.maxTouchPoints > 0
+  ){
+
+    document.getElementById("tabletKeyboard").style.display =
+      "block";
+
+    input.setAttribute("readonly",true);
+
   }else{
+
     input.removeAttribute("readonly");
   }
 });
 
+
+/* =========================================================
+   TABLET-TASTATUR
+   ========================================================= */
+
 function pressKey(key){
-  const input = document.getElementById("answerInput");
-  if(input.disabled) return;
+
+  const input =
+    document.getElementById("answerInput");
+
+  if(input.disabled){
+    return;
+  }
+
   input.value += key;
 }
 
+
 function deleteKey(){
-  const input = document.getElementById("answerInput");
-  if(input.disabled) return;
-  input.value = input.value.slice(0,-1);
+
+  const input =
+    document.getElementById("answerInput");
+
+  if(input.disabled){
+    return;
+  }
+
+  input.value =
+    input.value.slice(0,-1);
 }
 
-document.addEventListener("keydown", function(e){
-  const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
-  if(!isTouch && e.key === "Enter"){
-    const input = document.getElementById("answerInput");
-    if(!input.disabled && input.value.trim() !== ""){
+/* =========================================================
+   ENTER-TASTE AM COMPUTER
+   ========================================================= */
+
+document.addEventListener("keydown",function(e){
+
+  const isTouch =
+    ('ontouchstart' in window) ||
+    navigator.maxTouchPoints > 0;
+
+  if(
+    !isTouch &&
+    e.key === "Enter"
+  ){
+
+    const input =
+      document.getElementById("answerInput");
+
+    if(
+      !input.disabled &&
+      input.value.trim() !== ""
+    ){
       checkAnswer();
     }
   }
 });
+
 </script>
+
 </body>
 </html>
